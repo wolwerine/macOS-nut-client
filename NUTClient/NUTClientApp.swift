@@ -67,8 +67,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     private func updateMenuIcon() {
         if let button = statusItem.button {
-            let iconName = upsState.isRunningOnBattery ? "battery.25" : "bolt.fill.batteryblock"
-            button.image = NSImage(systemSymbolName: iconName, accessibilityDescription: "NUT Client")
+            let iconName = upsState.isRunningOnBattery ? "menuIcon.battery" : "menuIcon.power"
+            button.image = NSImage(named: iconName)
         }
     }
 
