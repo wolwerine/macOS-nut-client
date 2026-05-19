@@ -117,10 +117,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     // Add the properties under the header
                     for variable in varsInCategory {
                         if let liveValue = sharedClient.state.variables[variable.rawValue] {
-                            
-                            // Strip prefix for a cleaner look (e.g. "input.voltage" becomes "voltage")
-                            let cleanName = variable.rawValue.replacingOccurrences(of: "\(category.rawValue.lowercased()).", with: "")
-                            let displayTitle = "\(cleanName.capitalized): \(liveValue)"
+                            let displayTitle = "\(variable.displayName): \(variable.formatLiveValue(liveValue))"
                             
                             let item = NSMenuItem(title: displayTitle, action: nil, keyEquivalent: "")
                             item.isEnabled = false

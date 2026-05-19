@@ -239,9 +239,9 @@ struct PreferencesView: View {
                 
                 Toggle(isOn: isSelected) {
                     HStack {
-                        Text(variable.rawValue.replacingOccurrences(of: "\(category.rawValue.lowercased()).", with: ""))
+                        Text(variable.displayName)
                         Spacer()
-                        Text(state.variables[variable.rawValue] ?? "")
+                        Text(variable.formatLiveValue(state.variables[variable.rawValue] ?? ""))
                             .foregroundColor(.secondary)
                     }
                 }
