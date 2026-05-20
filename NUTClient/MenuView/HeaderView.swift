@@ -10,38 +10,34 @@ import Combine
 struct HeaderView: View {
     @ObservedObject var state: UPSStateMachine
     
-    // Determine title text based on the 3 requested states
     var stateTitle: String {
         if state.currentStatus.contains("LB") { return "Battery Low" }
         if state.currentStatus.contains("OB") { return "Running on Battery" }
-        return "Running on AC" // Default (OL - Online)
+        return "Running on AC" // default (OL - Online)
     }
     
-    // Match colors to state
     var stateColor: Color {
         if state.currentStatus.contains("LB") { return .red }
         if state.currentStatus.contains("OB") { return .orange }
         return .green
     }
     
-    // Match icons to state
     var stateIcon: String {
-        if state.currentStatus.contains("LB") { return "battery.25" }
-        if state.currentStatus.contains("OB") { return "battery.50" }
-        return "bolt.fill.batteryblock"
+        if state.currentStatus.contains("LB") { return "icon.battery.low" }
+        if state.currentStatus.contains("OB") { return "icon.battery.exclamation" }
+        return "icon.battery.bolt"
     }
 
     var body: some View {
         VStack(spacing: 12) {
-            // Top Half: Icon, Title, IP
+            // top half: icon, title, ip
             HStack(spacing: 12) {
-                // Large colored icon box
                 ZStack {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(stateColor.opacity(0.2))
                         .frame(width: 44, height: 44)
                     
-                    Image(systemName: stateIcon)
+                    Image(stateIcon)
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundColor(stateColor)
                 }
@@ -60,13 +56,13 @@ struct HeaderView: View {
             
             Divider()
                         
-            // Bottom Half: Stats List
+            // bottom half: stats list
             VStack(spacing: 8) {
-                // 1. Connection Status
+                // connection status
                 HStack {
-                    Image(systemName: "globe")
+                    Image("icon.globe")
                         .foregroundColor(.secondary)
-                        .frame(width: 20) // Ensures all icons align perfectly
+                        .frame(width: 20)
                     Text("NUT Status")
                         .foregroundColor(.secondary)
                         .font(.system(size: 13))
@@ -78,9 +74,9 @@ struct HeaderView: View {
                         .foregroundColor(state.isConnected ? .primary : .red)
                 }
                 
-                // 2. Battery Charge Level
+                // battery charge level
                 HStack {
-                    Image(systemName: "batteryblock")
+                    Image("icon.batteryblock")
                         .foregroundColor(.secondary)
                         .frame(width: 20)
                     Text("Battery Level")
@@ -94,9 +90,9 @@ struct HeaderView: View {
                         .foregroundColor(.primary)
                 }
                 
-                // 3. Current Load
+                // current load
                 HStack {
-                    Image(systemName: "bolt.square")
+                    Image("icon.bolt.square")
                         .foregroundColor(.secondary)
                         .frame(width: 20)
                     Text("Current Load")

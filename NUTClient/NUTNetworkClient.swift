@@ -11,7 +11,6 @@ class NUTClient {
     let state: UPSStateMachine
     
     private var connection: NWConnection?
-    // Change these from 'let' to 'var' so they can be updated
     private var host: NWEndpoint.Host
     private var port: NWEndpoint.Port
     private var upsName: String
@@ -21,11 +20,10 @@ class NUTClient {
     private var streamBuffer: String = ""
     private var pollTimer: Timer?
     private var isReconnecting: Bool = false
-    
-    // Add a flag to prevent auto-reconnecting when the user explicitly clicks "Disconnect"
     private var userRequestedDisconnect: Bool = false
     
-    init(state: UPSStateMachine, host: String, port: UInt16 = 3493, upsName: String = "ups", username: String? = nil, password: String? = nil) {
+    init(state: UPSStateMachine, host: String, port: UInt16 = 3493,
+         upsName: String = "ups", username: String? = nil, password: String? = nil) {
         self.state = state
         self.state.hostString = host
         
@@ -164,7 +162,9 @@ class NUTClient {
         }
     }
     
-    private func fetchStats() { send(command: "LIST VAR \(upsName)\n") }
+    private func fetchStats() {
+        send(command: "LIST VAR \(upsName)\n")
+    }
     
     private func send(command: String) {
         guard state.isConnected, let currentConnection = connection, let data = command.data(using: .utf8) else { return }
@@ -199,7 +199,6 @@ class NUTClient {
         
         if !parsedDict.isEmpty {
             DispatchQueue.main.async {
-                // Update the state machine safely on the main thread
                 self.state.variables.merge(parsedDict) { (_, new) in new }
             }
         }

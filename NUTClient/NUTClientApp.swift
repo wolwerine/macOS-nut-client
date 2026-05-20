@@ -22,7 +22,7 @@ struct NUTClientNativeApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var statusItem: NSStatusItem!
-    var popover: NSPopover!
+    var trayMenuController: TrayMenuController!
     
     let upsState = UPSStateMachine()
     lazy var sharedClient: NUTClient = {
@@ -42,21 +42,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     // Used to observe background changes for the icon
     private var cancellables = Set<AnyCancellable>()
-
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "bolt.fill.batteryblock",
-                                   accessibilityDescription: "NUT Client")
+            button.image = NSImage(named: "icon.battery.bolt")
         }
         
-        let menu = NSMenu()
-        menu.delegate = self // This tells the menu to ask us for items before opening
-        statusItem.menu = menu
+        trayMenuController = TrayMenuController(state: upsState)
+        statusItem.menu = trayMenuController.menu
         
         sharedClient.connect()
-        
         upsState.$variables
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
@@ -67,78 +64,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     private func updateMenuIcon() {
         if let button = statusItem.button {
-            let iconName = upsState.isRunningOnBattery ? "menuIcon.battery" : "menuIcon.power"
+            let iconName = upsState.isRunningOnBattery ? "icon.battery.exclamation" : "icon.battery.bolt"
             button.image = NSImage(named: iconName)
         }
-    }
-
-    // MARK: - NSMenuDelegate
-    
-    func menuWillOpen(_ menu: NSMenu) {
-        menu.removeAllItems()
-        
-        // --- 1. Rich SwiftUI Header ---
-        let headerView = HeaderView(state: sharedClient.state) // Assuming you use the state machine!
-        let headerController = NSHostingController(rootView: headerView)
-        headerController.view.frame.size = NSSize(width: 300, height: 155)
-        
-        let headerMenuItem = NSMenuItem()
-        headerMenuItem.view = headerController.view
-        menu.addItem(headerMenuItem)
-        
-        // --- 2. Dynamic Categorized Variables List ---
-        let savedVars = UserDefaults.standard.stringArray(forKey: "SelectedUPSVars") ?? []
-        
-        if savedVars.isEmpty {
-            let emptyItem = NSMenuItem(title: "No variables selected.", action: nil, keyEquivalent: "")
-            emptyItem.isEnabled = false
-            menu.addItem(emptyItem)
-        } else {
-            // Group the selected strings back into their Enums so we can sort them by category
-            let selectedEnums = savedVars.compactMap { UPSVariable(rawValue: $0) }
-            
-            for category in UPSCategory.allCases {
-                let varsInCategory = selectedEnums.filter { $0.category == category }
-                
-                // Only draw the category header if the user selected something inside it
-                if !varsInCategory.isEmpty {
-                    menu.addItem(NSMenuItem.separator())
-                    
-                    // Create the Bold Category Header
-                    let headerItem = NSMenuItem()
-                    let attrs: [NSAttributedString.Key: Any] = [
-                        .font: NSFont.systemFont(ofSize: 13, weight: .bold),
-                        .foregroundColor: NSColor.secondaryLabelColor
-                    ]
-                    headerItem.attributedTitle = NSAttributedString(string: category.rawValue.uppercased(), attributes: attrs)
-                    headerItem.isEnabled = false
-                    menu.addItem(headerItem)
-                    
-                    // Add the properties under the header
-                    for variable in varsInCategory {
-                        if let liveValue = sharedClient.state.variables[variable.rawValue] {
-                            let displayTitle = "\(variable.displayName): \(variable.formatLiveValue(liveValue))"
-                            
-                            let item = NSMenuItem(title: displayTitle, action: nil, keyEquivalent: "")
-                            item.isEnabled = false
-                            item.indentationLevel = 1 // Pushes the text to the right, grouping it under the header visually
-                            menu.addItem(item)
-                        }
-                    }
-                }
-            }
-        }
-        
-        menu.addItem(NSMenuItem.separator())
-        
-        // --- 3. SwiftUI Footer ---
-        let footerView = FooterView()
-        let footerController = NSHostingController(rootView: footerView)
-        // Height of 36 gives nice padding around the buttons
-        footerController.view.frame.size = NSSize(width: 300, height: 36)
-        
-        let footerMenuItem = NSMenuItem()
-        footerMenuItem.view = footerController.view
-        menu.addItem(footerMenuItem)
     }
 }
